@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nasa-jpl-cognition"
+version = "0.1.0"
+description = "NASA-JPL Science & Engineering Toolkit: Science data processing, spacecraft control simulation, and Monte Carlo analysis"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+    "pandas>=2.0.0",
+    "requests>=2.28.0",
+    "plotly>=5.14.0",
+    "astropy>=5.3",
+    "h5py>=3.8.0",
+    "scikit-learn>=1.2.0",
+    "tqdm>=4.65.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.3.0",
+    "ruff>=0.1.0",
+    "mypy>=1.4.0",
+]
+
+[tool.setuptools.packages.find]
+include = [
+    "science_data_processing*",
+    "spacecraft_control_simulation*",
+    "monte_carlo_simulation*",
+    "nasa_enhanced_usecases*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
