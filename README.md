@@ -149,7 +149,41 @@ result = spectral.analyze(cube)
 print(f"Identified {result.n_classes} spectral classes: {result.class_names}")
 ```
 
-## Installation
+## Interactive Web UI
+
+The toolkit includes a browser-based showcase that walks you through each module with interactive before/after comparisons showing how Devin accelerates NASA-JPL workflows.
+
+### Quick Start (Web UI)
+
+```bash
+# Clone the repo
+git clone https://github.com/COG-GTM/NASA-JPL-Cognition.git
+cd NASA-JPL-Cognition
+
+# Start the web UI
+cd web
+npm install
+npm run dev
+```
+
+Then open [http://localhost:5173](http://localhost:5173) in your browser.
+
+The web UI shows **12 use cases** across 3 modules, each with:
+- **Situation**: The real NASA-JPL problem
+- **Before**: The manual workflow with pain points
+- **What Devin Built**: The automated solution
+- **After**: The enhanced code with improvements
+- **Value**: Business impact and metrics
+
+### Building for Production
+
+```bash
+cd web
+npm run build    # Output in web/dist/
+npm run preview  # Preview production build
+```
+
+## Python Toolkit Installation
 
 ```bash
 pip install -e ".[dev]"
@@ -165,6 +199,8 @@ pip install -e ".[dev]"
 ```bash
 PYTHONPATH=. MPLBACKEND=Agg pytest tests/ -v
 ```
+
+All 48 tests pass across 4 modules.
 
 ## Related NASA/NASA-JPL Open-Source Tools
 
@@ -184,4 +220,4 @@ This toolkit draws inspiration from the following NASA repositories:
 
 ## License
 
-Apache 2.0 
+Apache 2.0   
