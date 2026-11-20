@@ -22,7 +22,7 @@ Automated pipelines for processing and visualizing planetary science data from N
 | **Near-Earth Object Tracking** | Real-time asteroid tracking with hazard assessment (Palermo/Torino scales) | [NASA CNEOS API](https://api.nasa.gov/neo), [NASA Center for NEO Studies](https://cneos.jpl.nasa.gov) |
 | **Exoplanet Analysis** | Habitability screening with Earth Similarity Index computation | [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu), [nasa/Kepler-PyKE](https://github.com/nasa/Kepler-PyKE) |
 
-> The NASA Mars Photos API currently returns HTTP 404, so `fetch_rover_images` returns an empty list and the Mars loop below prints nothing. `classify_terrain()` without arguments still runs on a synthetic image. The NEO and exoplanet fetchers fall back to synthetic data when their API call fails.
+> The NASA Mars Photos API currently returns HTTP 404, so `fetch_rover_images` returns an empty list and the Mars loop below prints nothing. `classify_terrain(image)` still runs offline: pass a `MarsImage` you build yourself with `pixel_data=None` and it uses a synthetic image. The NEO and exoplanet fetchers fall back to synthetic data when their API call fails.
 
 ```python
 from science_data_processing import MarsSurfaceAnalyzer, NearEarthObjectTracker, ExoplanetAnalyzer
