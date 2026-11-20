@@ -4,6 +4,12 @@ A comprehensive Python toolkit for science data processing, spacecraft control s
 
 Each module references real NASA/NASA-JPL open-source repositories and implements simplified but realistic versions of the workflows found in those tools.
 
+## Architecture
+
+The repo has two independent parts: a Python package with four sub-packages, and a static React showcase in `web/` that does not call the Python code. See [docs/architecture.md](docs/architecture.md) for the full breakdown and diagram ([Graphviz source](docs/diagrams/architecture.dot), rendered with `docs/diagrams/render.sh`).
+
+![Architecture diagram](docs/diagrams/architecture.png)
+
 ## Modules
 
 ### 1. Science Data Processing & Visualization
@@ -16,6 +22,8 @@ Automated pipelines for processing and visualizing planetary science data from N
 | **Near-Earth Object Tracking** | Real-time asteroid tracking with hazard assessment (Palermo/Torino scales) | [NASA CNEOS API](https://api.nasa.gov/neo), [NASA Center for NEO Studies](https://cneos.jpl.nasa.gov) |
 | **Exoplanet Analysis** | Habitability screening with Earth Similarity Index computation | [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu), [nasa/Kepler-PyKE](https://github.com/nasa/Kepler-PyKE) |
 
+> The NASA Mars Photos API currently returns HTTP 404, so `fetch_rover_images` returns an empty list and the Mars loop below prints nothing. `classify_terrain(image)` still runs offline: pass a `MarsImage` you build yourself with `pixel_data=None` and it uses a synthetic image. The NEO and exoplanet fetchers fall back to synthetic data when their API call fails.
+
 ```python
 from science_data_processing import MarsSurfaceAnalyzer, NearEarthObjectTracker, ExoplanetAnalyzer
 
@@ -24,7 +32,9 @@ analyzer = MarsSurfaceAnalyzer(api_key="DEMO_KEY")
 images = analyzer.fetch_rover_images(rover="curiosity", sol=1000, camera="NAVCAM")
 for img in images[:5]:
     classification = analyzer.classify_terrain(img)
-    print(f"Sol {img.sol}: {classification.dominant_terrain} ({classification.roughness_index:.3f})")
+    print(
+        f"Sol {img.sol}: {classification.dominant_terrain} ({classification.roughness_index:.3f})"
+    )
 
 # Asteroid tracking
 tracker = NearEarthObjectTracker()
@@ -52,7 +62,9 @@ Python-based spacecraft dynamics and control — the open-source equivalent of S
 
 ```python
 from spacecraft_control_simulation import (
-    SpacecraftAttitudeController, OrbitalMechanicsSimulator, PropulsionSystemModel
+    SpacecraftAttitudeController,
+    OrbitalMechanicsSimulator,
+    PropulsionSystemModel,
 )
 
 # Attitude control simulation
@@ -70,7 +82,7 @@ controller.plot_results(result, output_path="attitude_sim.png")
 sim = OrbitalMechanicsSimulator()
 transfer = sim.compute_hohmann_transfer(400, 35786)  # LEO to GEO
 print(f"Total delta-V: {transfer.total_delta_v_ms:.1f} m/s")
-print(f"Transfer time: {transfer.transfer_time_s/3600:.2f} hours")
+print(f"Transfer time: {transfer.transfer_time_s / 3600:.2f} hours")
 
 # Propulsion trade study
 prop = PropulsionSystemModel()
@@ -91,24 +103,29 @@ Monte Carlo methods for spacecraft mission analysis — trajectory uncertainty, 
 
 ```python
 from monte_carlo_simulation import (
-    TrajectoryUncertaintyAnalyzer, MissionReliabilitySimulator, RadiationEnvironmentModel
+    TrajectoryUncertaintyAnalyzer,
+    MissionReliabilitySimulator,
+    RadiationEnvironmentModel,
 )
 
 # EDL Monte Carlo (Mars landing dispersion)
 analyzer = TrajectoryUncertaintyAnalyzer(n_samples=10000)
 result = analyzer.run_edl_monte_carlo()
-print(f"99% landing ellipse: {result.percentile_99_ellipse_km[0]:.1f} x "
-      f"{result.percentile_99_ellipse_km[1]:.1f} km")
+print(
+    f"99% landing ellipse: {result.percentile_99_ellipse_km[0]:.1f} x "
+    f"{result.percentile_99_ellipse_km[1]:.1f} km"
+)
 print(f"Success rate: {result.success_rate:.1%}")
 
 # Mission reliability (deep-space mission)
 sim = MissionReliabilitySimulator(n_samples=10000)
 result = sim.run_reliability_analysis()
 print(f"Mission success probability: {result.mission_success_rate:.3f}")
-print(f"Mean time to failure: {result.mean_time_to_first_failure_hours/8766:.1f} years")
+print(f"Mean time to failure: {result.mean_time_to_first_failure_hours / 8766:.1f} years")
 
 # Radiation environment (Europa Clipper-like)
 from monte_carlo_simulation.radiation_environment import RadiationEnvironmentConfig
+
 rad = RadiationEnvironmentModel(n_samples=10000)
 config = RadiationEnvironmentConfig(environment_type="jupiter", mission_duration_years=6.0)
 result = rad.run_analysis(config)
@@ -137,6 +154,7 @@ print(f"RUL: {prediction.predicted_rul_cycles:.0f} cycles ({prediction.confidenc
 
 # Ice sheet mass change (Greenland)
 from nasa_enhanced_usecases.cryosphere_analysis.ice_sheet_analysis import GREENLAND
+
 ice = IceSheetAnalyzer()
 result = ice.analyze_mass_change(region=GREENLAND, start_year=2003.0, end_year=2023.0)
 print(f"Mass loss rate: {result.mass_rate_gt_yr:.0f} Gt/yr")
@@ -151,7 +169,7 @@ print(f"Identified {result.n_classes} spectral classes: {result.class_names}")
 
 ## Interactive Web UI
 
-The toolkit includes a browser-based showcase that walks you through each module with interactive before/after comparisons showing how Devin accelerates NASA-JPL workflows.
+The toolkit includes a browser-based showcase that walks you through each module with interactive before/after comparisons showing how Devin accelerates NASA-JPL workflows. It is a static Vite + React app: it needs only Node.js (`^20.19.0` or `>=22.12.0`, required by Vite 8), not the Python package, and it never calls the Python code.
 
 ### Quick Start (Web UI)
 
@@ -168,7 +186,7 @@ npm run dev
 
 Then open [http://localhost:5173](http://localhost:5173) in your browser.
 
-The web UI shows **12 use cases** across 3 modules, each with:
+The web UI shows **12 use cases** across 3 modules (the four Python sub-packages folded into three; the enhanced use cases appear inside them), each with:
 - **Situation**: The real NASA-JPL problem
 - **Before**: The manual workflow with pain points
 - **What Devin Built**: The automated solution
@@ -192,7 +210,7 @@ pip install -e ".[dev]"
 ### Requirements
 
 - Python >= 3.10
-- numpy, scipy, matplotlib, pandas, astropy, scikit-learn, plotly, h5py, requests, tqdm
+- numpy, scipy, matplotlib, pandas, astropy, scikit-learn, plotly, h5py, requests, tqdm (`astropy`, `h5py`, `plotly`, and `tqdm` are declared in `pyproject.toml` but not imported by any module)
 
 ## Testing
 
@@ -200,7 +218,7 @@ pip install -e ".[dev]"
 PYTHONPATH=. MPLBACKEND=Agg pytest tests/ -v
 ```
 
-All 48 tests pass across 4 modules.
+All 48 tests pass across 4 modules. They use synthetic data only and need no network. CI (`.github/workflows/ci.yml`) also runs `ruff check .` and `ruff format --check .`; it does not build `web/`.
 
 ## Related NASA/NASA-JPL Open-Source Tools
 

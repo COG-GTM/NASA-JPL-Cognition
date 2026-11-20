@@ -1,0 +1,90 @@
+// NASA-JPL-Cognition architecture. Edit this file, then run ./render.sh.
+digraph architecture {
+  graph [rankdir=LR, fontname="Helvetica", fontsize=12, pad=0.3, nodesep=0.35, ranksep=0.7, compound=true, newrank=true,
+         label="NASA-JPL-Cognition: Python toolkit and static web showcase (no runtime link between them)", labelloc=t, fontsize=16];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, fillcolor="#ffffff", color="#475569"];
+  edge  [fontname="Helvetica", fontsize=9, color="#475569"];
+
+  subgraph cluster_ext {
+    label="Public NASA APIs (optional, live)"; style="rounded,dashed"; color="#b45309"; fontcolor="#b45309";
+    mars_api [label="NASA Mars Photos API\napi.nasa.gov/mars-photos\n(returns 404; no fallback)", fillcolor="#fee2e2"];
+    neo_api  [label="NASA NeoWs feed\napi.nasa.gov/neo/rest/v1/feed\n(DEMO_KEY)", fillcolor="#fef3c7"];
+    exo_api  [label="NASA Exoplanet Archive\nTAP sync (ADQL on ps)", fillcolor="#fef3c7"];
+  }
+
+  subgraph cluster_py {
+    label="Python package nasa-jpl-cognition (pyproject.toml, Python >= 3.10)"; style="rounded,filled"; fillcolor="#eff6ff"; color="#1d4ed8"; fontcolor="#1d4ed8";
+
+    subgraph cluster_sdp {
+      label="science_data_processing"; style="rounded,filled"; fillcolor="#dbeafe"; color="#3b82f6";
+      mars [label="MarsSurfaceAnalyzer\nmars_surface_analysis.py"];
+      neo  [label="NearEarthObjectTracker\nasteroid_tracking.py"];
+      exo  [label="ExoplanetAnalyzer\nexoplanet_analysis.py"];
+    }
+    subgraph cluster_scs {
+      label="spacecraft_control_simulation"; style="rounded,filled"; fillcolor="#dbeafe"; color="#3b82f6";
+      att  [label="SpacecraftAttitudeController\nattitude_control.py"];
+      orb  [label="OrbitalMechanicsSimulator\norbital_mechanics.py"];
+      prop [label="PropulsionSystemModel\npropulsion_model.py"];
+    }
+    subgraph cluster_mc {
+      label="monte_carlo_simulation"; style="rounded,filled"; fillcolor="#dbeafe"; color="#3b82f6";
+      edl  [label="TrajectoryUncertaintyAnalyzer\ntrajectory_uncertainty.py"];
+      rel  [label="MissionReliabilitySimulator\nmission_reliability.py"];
+      rad  [label="RadiationEnvironmentModel\nradiation_environment.py"];
+    }
+    subgraph cluster_enh {
+      label="nasa_enhanced_usecases"; style="rounded,filled"; fillcolor="#dbeafe"; color="#3b82f6";
+      rul  [label="BatteryRULPredictor\nprognostics/battery_rul.py"];
+      ice  [label="IceSheetAnalyzer\ncryosphere_analysis/ice_sheet_analysis.py"];
+      hyp  [label="HyperspectralAnalyzer\nspectral_processing/hyperspectral_analysis.py"];
+    }
+    synth [label="In-module synthetic data generators\n(_generate_synthetic_*, generate_synthetic_*)", fillcolor="#f1f5f9"];
+    stack [label="numpy · scipy (solve_ivp, stats, ndimage, curve_fit)\nscikit-learn (PCA, KMeans) · pandas · requests\nmatplotlib (plot_* / generate_* → PNG)", shape=component, fillcolor="#f1f5f9"];
+    out   [label="Outputs\n@dataclass results + matplotlib figures", shape=note, fillcolor="#ecfdf5"];
+  }
+
+  subgraph cluster_qa {
+    label="Quality gates"; style="rounded,filled"; fillcolor="#f8fafc"; color="#64748b";
+    tests [label="tests/ (pytest, 48 tests)\noffline: synthetic data only"];
+    ci    [label=".github/workflows/ci.yml\nlint: ruff check + ruff format --check\ntest: pytest on 3.10 / 3.11 / 3.12\n(web/ is not built in CI)"];
+  }
+
+  subgraph cluster_web {
+    label="web/: static React showcase (Vite 8, React 19, Tailwind 4, Node ^20.19 or >= 22.12)"; style="rounded,filled"; fillcolor="#f5f3ff"; color="#7c3aed"; fontcolor="#7c3aed";
+    html  [label="index.html → src/main.tsx"];
+    app   [label="src/App.tsx\nApp (activeModule state)\n→ ModuleSection (expandedUseCase state)\n→ UseCaseCard → CodeBlock, MetricBadge"];
+    reg   [label="src/data/index.ts\nmodules[] (3 modules, 12 use cases)"];
+    sd    [label="data/scienceData.ts\nMars, NEO, Exoplanet, Hyperspectral"];
+    sc    [label="data/spacecraftControl.ts\nAttitude, Orbital, Propulsion, Battery RUL"];
+    mcd   [label="data/monteCarlo.ts\nEDL, Reliability, Radiation, Ice sheet"];
+    types [label="src/types.ts\nModule, UseCase", fillcolor="#f1f5f9"];
+    dist  [label="npm run build → web/dist/\n(static files, no backend)", shape=note, fillcolor="#ecfdf5"];
+    browser [label="Browser\nlocalhost:5173 (dev)", shape=ellipse, fillcolor="#ede9fe"];
+  }
+
+  mars -> mars_api [label="HTTP GET"];
+  neo  -> neo_api  [label="HTTP GET"];
+  exo  -> exo_api  [label="HTTP GET"];
+  neo  -> synth [style=dashed, label="on request error"];
+  exo  -> synth [style=dashed, label="on request error"];
+  mars -> synth [style=dashed, label="classify_terrain\nwithout pixels"];
+  hyp  -> synth [style=dashed, ltail=cluster_enh, label="generate_synthetic_*"];
+
+  neo  -> stack [ltail=cluster_sdp, color="#94a3b8"];
+  prop -> stack [ltail=cluster_scs, color="#94a3b8"];
+  rel  -> stack [ltail=cluster_mc,  color="#94a3b8"];
+  ice  -> stack [ltail=cluster_enh, color="#94a3b8"];
+  stack -> out;
+  ci -> tests;
+  tests -> rel [lhead=cluster_py, style=dotted, label="imports all 4 packages"];
+
+  browser -> html;
+  html -> app;
+  app -> reg;
+  reg -> {sd sc mcd};
+  {sd sc mcd} -> types [style=dotted];
+  app -> dist [style=dotted, label="vite build"];
+  snip [label="Use-case code samples in data/*.ts are\nhand-written strings, not imports of the\nPython package; web/ never calls Python", shape=note, fillcolor="#fff7ed", color="#c2410c"];
+  sd -> snip [style=invis];
+}
