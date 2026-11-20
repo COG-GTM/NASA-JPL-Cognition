@@ -41,7 +41,7 @@ Code imports `numpy`, `scipy`, `matplotlib`, `pandas`, `requests`, and `scikit-l
 A single-page Vite 8 + React 19 + TypeScript app styled with Tailwind CSS 4 (via `@tailwindcss/vite`) and icons from `lucide-react`.
 
 - `index.html` loads `src/main.tsx`, which mounts `App` in `StrictMode`.
-- `src/App.tsx` holds every component. `App` keeps the selected module in `activeModule` state and renders three module cards; `ModuleSection` shows the selected module and keeps `expandedUseCase` state; `UseCaseCard` expands to show Situation, Before (code + pain points), What Devin Built, After (code + improvements), and Value, using `CodeBlock` and `MetricBadge`.
+- `src/App.tsx` holds every component. `App` keeps the selected module in `activeModule` state and renders three module cards; `ModuleSection` shows the selected module and keeps `expandedUseCase` state; `UseCaseCard` always shows the title and `MetricBadge` metrics, and on click expands to Situation, Before (code in `CodeBlock` + pain points), What Devin Built, After (code + improvements), and a "Value to NASA-JPL" paragraph. Only one use case per module is open at a time.
 - `src/data/index.ts` exports `modules`, the registry of three `Module` objects (`src/types.ts`), each with four `UseCase` entries.
 
 The web UI has three modules, not four. The `nasa_enhanced_usecases` models are shown inside them:
