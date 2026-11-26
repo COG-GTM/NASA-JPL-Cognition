@@ -39,7 +39,11 @@ class TestSpacecraftAttitudeController:
         rng = np.random.default_rng(0)
         for _ in range(1000):
             a, b = rng.normal(size=3) * 1e3, rng.normal(size=3) * 1e-3
-            assert np.array_equal(SpacecraftAttitudeController._cross3(a, b), np.cross(a, b))
+            got = SpacecraftAttitudeController._cross3(a, b)
+            assert got.dtype == np.float64
+            assert got.tobytes() == np.cross(a, b).tobytes()
+        a, b = np.array([0.0, -0.0, 1.0]), np.array([-0.0, 0.0, -1.0])
+        assert SpacecraftAttitudeController._cross3(a, b).tobytes() == np.cross(a, b).tobytes()
 
     def test_pointing_error_decreases(self):
         controller = SpacecraftAttitudeController()
