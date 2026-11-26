@@ -35,6 +35,16 @@ class TestSpacecraftAttitudeController:
         norms = np.linalg.norm(result.quaternions, axis=1)
         np.testing.assert_allclose(norms, 1.0, atol=1e-6)
 
+    def test_cross3_matches_numpy_cross_exactly(self):
+        rng = np.random.default_rng(0)
+        for _ in range(1000):
+            a, b = rng.normal(size=3) * 1e3, rng.normal(size=3) * 1e-3
+            got = SpacecraftAttitudeController._cross3(a, b)
+            assert got.dtype == np.float64
+            assert got.tobytes() == np.cross(a, b).tobytes()
+        a, b = np.array([0.0, -0.0, 1.0]), np.array([-0.0, 0.0, -1.0])
+        assert SpacecraftAttitudeController._cross3(a, b).tobytes() == np.cross(a, b).tobytes()
+
     def test_pointing_error_decreases(self):
         controller = SpacecraftAttitudeController()
         result = controller.run_simulation(

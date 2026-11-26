@@ -188,7 +188,7 @@ class SpacecraftAttitudeController:
 
             # Euler's equation: I * omega_dot = torque - omega x (I * omega)
             inertia = self.config.inertia_matrix
-            omega_cross_h = np.cross(omega, inertia @ omega)
+            omega_cross_h = self._cross3(omega, inertia @ omega)
             omega_dot = np.linalg.solve(inertia, total_torque - omega_cross_h)
 
             # Quaternion kinematics: q_dot = 0.5 * Omega * q
@@ -308,7 +308,7 @@ class SpacecraftAttitudeController:
             nadir = dcm @ np.array([0, 0, -1])
 
             inertia = self.config.inertia_matrix
-            gg_torque = 3 * n**2 * np.cross(nadir, inertia @ nadir)
+            gg_torque = 3 * n**2 * self._cross3(nadir, inertia @ nadir)
             disturbance += gg_torque
 
         if self.config.solar_pressure_enabled:
@@ -349,6 +349,13 @@ class SpacecraftAttitudeController:
                 w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
             ]
         )
+
+    @staticmethod
+    def _cross3(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+        """3-vector cross product; same arithmetic as np.cross without its per-call overhead."""
+        a0, a1, a2 = a.tolist()
+        b0, b1, b2 = b.tolist()
+        return np.array([a1 * b2 - a2 * b1, a2 * b0 - a0 * b2, a0 * b1 - a1 * b0])
 
     @staticmethod
     def _omega_matrix(omega: np.ndarray) -> np.ndarray:
